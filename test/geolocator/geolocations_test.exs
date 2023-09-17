@@ -1,9 +1,43 @@
 defmodule Geolocator.GeolocationsTest do
-  use Geolocator.DataCase
+  use Geolocator.DataCase, async: true
 
   alias Geolocator.Geolocations
   alias Geolocator.Geolocations.Geolocation
   alias Geolocator.Geolocations.GeolocationFixture
+  alias Geolocator.Geolocations.ParsingReport
+
+  @file_name "geolocations.csv"
+  @csv_data """
+  ip_address,country_code,country,city,latitude,longitude,mystery_value
+  200.106.141.15,SI,Nepal,DuBuquemouth,-84.87503094689836,7.206435933364332,7823011346
+  160.103.7.140,CZ,Nicaragua,New Neva,-68.31023296602508,-37.62435199624531,7301823115
+  70.95.73.73,TL,Saudi Arabia,Gradymouth,-49.16675918861615,-86.05920084416894,2559997162
+  ,PY,Falkland Islands (Malvinas),,75.41685191518815,-144.6943217219469,0
+  125.159.20.54,LI,Guyana,Port Karson,-78.2274228596799,-163.26218895343357,1337885276
+  """
+
+  describe "parse_geolocations_from_csv!/1" do
+    @tag :tmp_dir
+    test "parses geolocations from CSV file and inserts them into the database", %{
+      tmp_dir: tmp_dir
+    } do
+      path = Path.join(tmp_dir, @file_name)
+      File.touch(path)
+      File.write!(path, @csv_data)
+
+      assert %ParsingReport{
+               inserted_count: 4,
+               error_count: 1,
+               time_elapsed: time_elapsed
+             } = Geolocations.parse_geolocations_from_csv!(path)
+
+      assert time_elapsed > 0
+    end
+
+    test "returns error when file does not exist" do
+      assert {:error, :file_not_found} = Geolocations.parse_geolocations_from_csv!(@file_name)
+    end
+  end
 
   describe "create_geolocations/1" do
     test "creates geolocations" do

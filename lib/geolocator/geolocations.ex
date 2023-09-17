@@ -3,8 +3,37 @@ defmodule Geolocator.Geolocations do
   Geolocations context
   """
 
+  alias Geolocator.CSV
   alias Geolocator.Geolocations.Geolocation
   alias Geolocator.Repo
+
+  @csv_stream_chunk_size 1000
+
+  defmodule ParsingReport do
+    defstruct inserted_count: 0, error_count: 0, time_elapsed: 0
+  end
+
+  @doc """
+  Parses geolocations from the given CSV file and inserts them into the database in batches by #{@csv_stream_chunk_size}.
+  """
+  @spec parse_geolocations_from_csv!(String.t()) :: %{
+          inserted_count: integer(),
+          error_count: integer()
+        }
+  def parse_geolocations_from_csv!(path) do
+    started_at = System.monotonic_time(:millisecond)
+
+    case CSV.parse_file(path) do
+      {:ok, stream} ->
+        stream
+        |> Stream.chunk_every(@csv_stream_chunk_size)
+        |> Stream.map(&parse_and_insert_geolocations/1)
+        |> generate_parsing_report(started_at)
+
+      {:error, _reason} = error ->
+        error
+    end
+  end
 
   @doc """
   Creates geolocations using low-level `Repo.insert_all/3` for a maximum efficiency.
@@ -64,5 +93,38 @@ defmodule Geolocator.Geolocations do
   @spec get_geolocation(Postgrex.INET.t()) :: Geolocation.t() | nil
   def get_geolocation(ip_address) do
     Repo.get_by(Geolocation, ip_address: ip_address)
+  end
+
+  defp parse_and_insert_geolocations(rows) do
+    %{geolocations: geolocations, errors: errors} =
+      Enum.reduce(rows, %{geolocations: [], errors: []}, &parse_geolocation/2)
+
+    :ok = create_geolocations!(geolocations)
+
+    %ParsingReport{inserted_count: length(geolocations), error_count: length(errors)}
+  end
+
+  defp parse_geolocation(row, acc) do
+    case Geolocation.changeset(%Geolocation{}, row) do
+      %Ecto.Changeset{valid?: true} = changeset ->
+        geolocation = Ecto.Changeset.apply_action!(changeset, :transform)
+        %{acc | geolocations: [geolocation | acc.geolocations]}
+
+      %Ecto.Changeset{valid?: false} = changeset ->
+        %{acc | errors: [changeset | acc.errors]}
+    end
+  end
+
+  defp generate_parsing_report(results, started_at) do
+    results
+    |> Enum.reduce(%ParsingReport{}, fn
+      %{inserted_count: inserted_count, error_count: error_count}, %ParsingReport{} = report ->
+        %{
+          report
+          | inserted_count: report.inserted_count + inserted_count,
+            error_count: report.error_count + error_count
+        }
+    end)
+    |> Map.put(:time_elapsed, System.monotonic_time(:millisecond) - started_at)
   end
 end
