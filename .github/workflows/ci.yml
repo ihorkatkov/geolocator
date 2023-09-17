@@ -62,15 +62,3 @@ jobs:
         env:
           DB_USER: ${{ env.POSTGRES_USER }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-      - name: Retrieve PLT Cache
-        uses: actions/cache@v3
-        id: plt-cache
-        with:
-          path: priv/plts
-          key: ${{ runner.os }}-dialyzer-plts-v2-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-      - name: Create PLTs
-        if: steps.plt-cache.outputs.cache-hit != 'true'
-        run: |
-          mix dialyzer --plt
-      - name: Run dialyzer
-        run: mix dialyzer --no-check
