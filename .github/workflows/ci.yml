@@ -49,6 +49,12 @@ jobs:
           key: ${{ runner.os }}-test-build-v1
           restore-keys: |
             ${{ runner.os }}-test-build-v1
+      - name: Retrieve PLT Cache
+        uses: actions/cache@v3
+        id: plt-cache
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-dialyzer-plts-v2-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - name: Install Dependencies
         run: mix do deps.get, deps.compile
       - name: Compile app
@@ -59,6 +65,12 @@ jobs:
         run: mix credo --strict
       - name: Run Tests
         run: mix test
+      - name: Create PLTs
+        if: steps.plt-cache.outputs.cache-hit != 'true'
+        run: |
+          mix dialyzer --plt
+      - name: Run dialyzer
+        run: mix dialyzer --no-check
         env:
           DB_USER: ${{ env.POSTGRES_USER }}
           DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
