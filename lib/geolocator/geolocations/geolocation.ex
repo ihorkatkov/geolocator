@@ -1,10 +1,24 @@
 defmodule Geolocator.Geolocations.Geolocation do
-  @moduledoc false
+  @moduledoc """
+  Represents a geolocation schema.
+  Uses INET type for ip_address since Postgres provides more efficient storage mechanism
+  for ip addresses, and it also provides a number of useful functions for working with.
+  """
 
   use Ecto.Schema
   import Ecto.Changeset
 
   alias EctoNetwork.INET
+
+  @type t :: %__MODULE__{
+          city: String.t(),
+          country: String.t(),
+          country_code: String.t(),
+          ip_address: Postgrex.INET.t(),
+          latitude: String.t(),
+          longitude: String.t(),
+          mystery_value: integer()
+        }
 
   @primary_key {:ip_address, INET, autogenerate: false}
 
@@ -18,7 +32,7 @@ defmodule Geolocator.Geolocations.Geolocation do
     field :longitude, :string
     field :mystery_value, :integer
 
-    timestamps()
+    timestamps(type: :naive_datetime_usec)
   end
 
   @doc false

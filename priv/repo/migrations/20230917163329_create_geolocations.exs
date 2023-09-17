@@ -9,7 +9,7 @@ defmodule Geolocator.Repo.Migrations.CreateGeolocations do
       add :city, :string
       add :latitude, :string
       add :longitude, :string
-      add :mystery_value, :integer
+      add :mystery_value, :bigint
 
       timestamps()
     end
