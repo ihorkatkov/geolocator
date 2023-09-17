@@ -5,21 +5,21 @@ defmodule Geolocator.Geolocations do
 
   alias Geolocator.CSV
   alias Geolocator.Geolocations.Geolocation
+  alias Geolocator.Geolocations.ParsingReport
   alias Geolocator.Repo
 
   @csv_stream_chunk_size 1000
 
-  defmodule ParsingReport do
-    defstruct inserted_count: 0, error_count: 0, time_elapsed: 0
-  end
-
   @doc """
   Parses geolocations from the given CSV file and inserts them into the database in batches by #{@csv_stream_chunk_size}.
+  Utilizes Stream API to reduce memory consumption.
+
+  ## Example
+  iex> Geolocator.Geolocations.parse_geolocations_from_csv!("path/to/file.csv")
+  iex> {:ok, %ParsingReport{inserted_count: 4, error_count: 1, time_elapsed_ms: 23}}
   """
-  @spec parse_geolocations_from_csv!(String.t()) :: %{
-          inserted_count: integer(),
-          error_count: integer()
-        }
+  @spec parse_geolocations_from_csv!(String.t()) ::
+          {:ok, ParsingReport.t()} | {:error, :file_not_found}
   def parse_geolocations_from_csv!(path) do
     started_at = System.monotonic_time(:millisecond)
 
@@ -29,6 +29,7 @@ defmodule Geolocator.Geolocations do
         |> Stream.chunk_every(@csv_stream_chunk_size)
         |> Stream.map(&parse_and_insert_geolocations/1)
         |> generate_parsing_report(started_at)
+        |> then(&{:ok, &1})
 
       {:error, _reason} = error ->
         error
@@ -125,6 +126,6 @@ defmodule Geolocator.Geolocations do
             error_count: report.error_count + error_count
         }
     end)
-    |> Map.put(:time_elapsed, System.monotonic_time(:millisecond) - started_at)
+    |> Map.put(:time_elapsed_ms, System.monotonic_time(:millisecond) - started_at)
   end
 end

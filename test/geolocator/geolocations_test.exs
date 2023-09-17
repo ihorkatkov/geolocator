@@ -25,13 +25,27 @@ defmodule Geolocator.GeolocationsTest do
       File.touch(path)
       File.write!(path, @csv_data)
 
-      assert %ParsingReport{
-               inserted_count: 4,
-               error_count: 1,
-               time_elapsed: time_elapsed
-             } = Geolocations.parse_geolocations_from_csv!(path)
+      assert {:ok,
+              %ParsingReport{
+                inserted_count: 4,
+                error_count: 1,
+                time_elapsed_ms: time_elapsed_ms
+              }} = Geolocations.parse_geolocations_from_csv!(path)
 
-      assert time_elapsed > 0
+      assert time_elapsed_ms > 0
+    end
+
+    @tag :tmp_dir
+    test "parses wrong data from CSV file and returns the report", %{
+      tmp_dir: tmp_dir
+    } do
+      path = Path.join(tmp_dir, @file_name)
+      File.touch(path)
+      File.write!(path, "wrong data")
+
+      assert {:ok,
+              %ParsingReport{inserted_count: 0, error_count: 0, time_elapsed_ms: _time_elapsed}} =
+               Geolocations.parse_geolocations_from_csv!(path)
     end
 
     test "returns error when file does not exist" do
