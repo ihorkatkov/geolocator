@@ -1,4 +1,6 @@
 # Geolocator
+![CI](https://github.com/ihorkatkov/geolocator/actions/workflows/ci.yml/badge.svg)
+
 
 To start your Phoenix server:
 
