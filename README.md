@@ -1,5 +1,6 @@
 # Geolocator
 ![CI](https://github.com/ihorkatkov/geolocator/actions/workflows/ci.yml/badge.svg)
+![Fly.io | CD](https://github.com/ihorkatkov/geolocator/actions/workflows/cd.yml/badge.svg)
 
 
 To start your Phoenix server:
