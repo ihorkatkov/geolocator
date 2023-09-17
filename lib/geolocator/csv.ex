@@ -8,7 +8,7 @@ defmodule Geolocator.CSV do
   @doc """
   Parses the given CSV file and returns a stream of maps.
   """
-  @spec parse_file(path :: String.t()) :: {:ok, [map()]} | {:error, :file_not_found}
+  @spec parse_file(path :: String.t()) :: {:ok, Enum.t()} | {:error, :file_not_found}
   def parse_file(path) do
     case File.exists?(path) do
       true ->
