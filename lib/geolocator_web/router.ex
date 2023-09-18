@@ -7,6 +7,8 @@ defmodule GeolocatorWeb.Router do
 
   scope "/api", GeolocatorWeb do
     pipe_through :api
+
+    get "/geolocations/:ip_address", GeolocationController, :show
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
