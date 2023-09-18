@@ -10,7 +10,7 @@ defmodule Geolocator.Geolocations do
   alias Geolocator.Geolocations.ParsingReport
   alias Geolocator.Repo
 
-  @csv_stream_chunk_size 1_000
+  @csv_stream_chunk_size Application.compile_env(:geolocator, :csv_stream_chunk_size)
 
   @doc """
   Parses geolocations from the given CSV file and inserts them into the database in batches by #{@csv_stream_chunk_size}.
