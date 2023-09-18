@@ -3,24 +3,27 @@ defmodule Geolocator.Geolocations do
   Geolocations context
   """
 
+  use Geolocator.Decorators.TelemetrySpan
+
   alias Geolocator.CSV
   alias Geolocator.Geolocations.Geolocation
   alias Geolocator.Geolocations.ParsingReport
   alias Geolocator.Repo
 
-  @csv_stream_chunk_size 1000
+  @csv_stream_chunk_size 1_000
 
   @doc """
   Parses geolocations from the given CSV file and inserts them into the database in batches by #{@csv_stream_chunk_size}.
   Utilizes Stream API to reduce memory consumption.
 
   ## Example
-  iex> Geolocator.Geolocations.parse_geolocations_from_csv!("path/to/file.csv")
+  iex> Geolocator.Geolocations.parse_geolocations_from_csv("path/to/file.csv")
   iex> {:ok, %ParsingReport{inserted_count: 4, error_count: 1, time_elapsed_ms: 23}}
   """
-  @spec parse_geolocations_from_csv!(String.t()) ::
+  @spec parse_geolocations_from_csv(String.t()) ::
           {:ok, ParsingReport.t()} | {:error, :file_not_found}
-  def parse_geolocations_from_csv!(path) do
+  @decorate span([:geolocator, :geolocations, :parse_geolocations_from_csv], %{})
+  def parse_geolocations_from_csv(path) do
     started_at = System.monotonic_time(:millisecond)
 
     case CSV.parse_file(path) do
@@ -98,11 +101,18 @@ defmodule Geolocator.Geolocations do
 
   defp parse_and_insert_geolocations(rows) do
     %{geolocations: geolocations, errors: errors} =
-      Enum.reduce(rows, %{geolocations: [], errors: []}, &parse_geolocation/2)
+      rows
+      |> Enum.reduce(%{geolocations: [], errors: []}, &parse_geolocation/2)
+      |> Map.update!(:geolocations, &reject_duplicated_geolocations/1)
 
     :ok = create_geolocations!(geolocations)
 
     %ParsingReport{inserted_count: length(geolocations), error_count: length(errors)}
+  end
+
+  defp reject_duplicated_geolocations(geolocations) do
+    #  Geolocations are reversed during parsing so that's why uniq_by actualy leaves the last entry.
+    Enum.uniq_by(geolocations, & &1.ip_address)
   end
 
   defp parse_geolocation(row, acc) do
