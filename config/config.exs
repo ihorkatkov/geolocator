@@ -10,6 +10,9 @@ import Config
 config :geolocator,
   ecto_repos: [Geolocator.Repo]
 
+# Set migrations timestamp type to :naive_datetime_usec (timestamp with milliseconds)
+config :geolocator, Geolocator.Repo, migration_timestamps: [type: :naive_datetime_usec]
+
 # Configures the endpoint
 config :geolocator, GeolocatorWeb.Endpoint,
   url: [host: "localhost"],
