@@ -23,6 +23,12 @@ defmodule GeolocatorWeb.Telemetry do
 
   def metrics do
     [
+      summary("geolocator.geolocations.parse_geolocations_from_csv.start.system_time",
+        unit: {:native, :millisecond}
+      ),
+      summary("geolocator.geolocations.parse_geolocations_from_csv.stop.duration",
+        unit: {:native, :millisecond}
+      ),
       # Phoenix Metrics
       summary("phoenix.endpoint.start.system_time",
         unit: {:native, :millisecond}

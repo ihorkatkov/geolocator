@@ -16,7 +16,7 @@ defmodule Geolocator.GeolocationsTest do
   125.159.20.54,LI,Guyana,Port Karson,-78.2274228596799,-163.26218895343357,1337885276
   """
 
-  describe "parse_geolocations_from_csv!/1" do
+  describe "parse_geolocations_from_csv/1" do
     @tag :tmp_dir
     test "parses geolocations from CSV file and inserts them into the database", %{
       tmp_dir: tmp_dir
@@ -30,7 +30,7 @@ defmodule Geolocator.GeolocationsTest do
                 inserted_count: 4,
                 error_count: 1,
                 time_elapsed_ms: time_elapsed_ms
-              }} = Geolocations.parse_geolocations_from_csv!(path)
+              }} = Geolocations.parse_geolocations_from_csv(path)
 
       assert time_elapsed_ms > 0
     end
@@ -45,11 +45,35 @@ defmodule Geolocator.GeolocationsTest do
 
       assert {:ok,
               %ParsingReport{inserted_count: 0, error_count: 0, time_elapsed_ms: _time_elapsed}} =
-               Geolocations.parse_geolocations_from_csv!(path)
+               Geolocations.parse_geolocations_from_csv(path)
+    end
+
+    @tag :tmp_dir
+    test "leaves last geolocation", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, @file_name)
+
+      csv_data = """
+      ip_address,country_code,country,city,latitude,longitude,mystery_value
+      200.106.141.15,SI,Nepal,DuBuquemouth,-84.87503094689836,7.206435933364332,7823011346
+      200.106.141.15,NL,Netherlands,Amsterdam,-44.87503094689836,3.206435933364332,4823011346
+      """
+
+      File.touch(path)
+      File.write!(path, csv_data)
+
+      assert {:ok,
+              %ParsingReport{
+                inserted_count: 1,
+                error_count: 0,
+                time_elapsed_ms: _time_elapsed_ms
+              }} = Geolocations.parse_geolocations_from_csv(path)
+
+      assert %Geolocation{country_code: "NL", city: "Amsterdam"} =
+               Geolocations.get_geolocation("200.106.141.15")
     end
 
     test "returns error when file does not exist" do
-      assert {:error, :file_not_found} = Geolocations.parse_geolocations_from_csv!(@file_name)
+      assert {:error, :file_not_found} = Geolocations.parse_geolocations_from_csv(@file_name)
     end
   end
 

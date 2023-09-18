@@ -53,6 +53,7 @@ defmodule Geolocator.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:ecto_network, "~> 1.3.0"},
       {:nimble_csv, "~> 1.1"},
+      {:decorator, "~> 1.4"},
 
       # Development dependencies
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
