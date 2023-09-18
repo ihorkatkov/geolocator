@@ -5,15 +5,14 @@
 
 # Table of Contents
 
-* Introduction
-* Getting Started
-  * Local Setup
-  * Docker Setup
-* Data Model and Schema
-* Geolocation Parsing 
-* REST API Layer
-* CI/CD pipelines
-* Future Improvements and Final Thoughts
+* [Introduction](#introduction)
+* [Getting Started](#getting-started)
+  * [Local Setup](#local-setup)
+  * [Docker Setup](#docker-local-setup)
+* [Data Model and Schema](#data-schema)
+* [Geolocation Parsing](#geolocation-parsnig)
+* [REST API Layer](#rest-api-layer)
+* [CI/CD pipelines](#cicd-pipelines)
 
 
 # Introduction
