@@ -13,4 +13,11 @@ defmodule GeolocatorWeb.FallbackController do
     |> put_view(html: GeolocatorWeb.ErrorHTML, json: GeolocatorWeb.ErrorJSON)
     |> render(:"404")
   end
+
+  def call(conn, {:error, :bad_request, errors}) do
+    conn
+    |> put_status(400)
+    |> put_view(json: GeolocatorWeb.ErrorJSON)
+    |> render(:"400", errors)
+  end
 end

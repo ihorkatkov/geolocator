@@ -2,13 +2,6 @@ defmodule GeolocatorWeb.GeolocationJSON do
   alias Geolocator.Geolocations.Geolocation
 
   @doc """
-  Renders a list of geolocations.
-  """
-  def index(%{geolocations: geolocations}) do
-    %{data: for(geolocation <- geolocations, do: data(geolocation))}
-  end
-
-  @doc """
   Renders a single geolocation.
   """
   def show(%{geolocation: geolocation}) do

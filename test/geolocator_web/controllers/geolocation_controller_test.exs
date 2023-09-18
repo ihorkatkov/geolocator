@@ -29,6 +29,15 @@ defmodule GeolocatorWeb.GeolocationControllerTest do
       conn = get(conn, ~p"/api/geolocations/0.0.0.0")
       assert json_response(conn, 404)["errors"] != %{}
     end
+
+    test "returns 400 when specified ip address is invalid", %{conn: conn} do
+      conn = get(conn, ~p"/api/geolocations/invalid_ip_address")
+
+      assert json_response(conn, 400)["errors"] == %{
+               "detail" => "Bad Request",
+               "errors" => %{"ip_address" => "is invalid"}
+             }
+    end
   end
 
   defp create_geolocation(attrs \\ %{}) do
