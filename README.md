@@ -13,6 +13,7 @@
 * [Geolocation Parsing](#geolocation-parsnig)
 * [REST API Layer](#rest-api-layer)
 * [CI/CD pipelines](#cicd-pipelines)
+* [Authorization](#authorization)
 
 
 # Introduction
@@ -39,7 +40,7 @@ This script automates the installation of dependencies and performs database ini
 TBA
 
 # Data Schema
-[The database schema](https://github.com/ihorkatkov/geolocator/blob/main/lib/geolocator/geolocations/geolocation.ex) mirrors the model present in the CSV file, designating the ip_address field as the primary key within the Postgres database. To optimize for both storage efficiency and functional robustness, I have chosen to utilize Postgres's INET data type for the ip_address field. This decision not only streamlines storage but also avails us of a comprehensive suite of specialized functions for IP address manipulation.
+[The database schema](https://github.com/ihorkatkov/geolocator/blob/main/lib/geolocator/geolocations/geolocation.ex) is pretty much a mirror of the model in the CSV file. I've set the ip_address field as the primary key in the Postgres database. To be smart about storage and functionality, I'm using Postgres's INET data type for the ip_address. This not only saves space but also gives us a bunch of cool, specialized functions for messing with IP addresses.
 
 ```elixir
 @type t :: %Geolocator.Geolocations.Geolocator{
@@ -54,11 +55,11 @@ TBA
 ```
 
 # Geolocation parsnig
-In an effort to optimize data ingestion, the CSV parsing [mechanism has been engineered](https://github.com/ihorkatkov/geolocator/blob/main/lib/geolocator/geolocations.ex#L23) using Elixir's Stream module. The parser is designed to transform and batch-insert data into the database, a process that is finely configurable to ensure optimal performance. Notably, this approach has proven highly efficient, even on minimal instance types hosted on fly.io.
+I've fine-tuned the data input process using Elixir's Stream module for CSV parsing. The parser I've designed transforms the data and batch-inserts it into the database. You can even tweak the settings to get the best performance. This setup performs efficiently, even on smaller cloud instances such as those on fly.io.
 
-To maximize database insertion efficiency, we employ Elixir's low-level Repo.insert_all function. This ensures optimal speed while also updating geolocations that share an existing IP address, thus maintaining data integrity.
+To ensure quick database inserts, I utilize Elixir's Repo.insert_all function. This not only speeds things up but also updates any geolocations with the same IP, ensuring data integrity.
 
-While the current implementation is effective, there is an opportunity for performance enhancements through a transition to a GenStage (Flow) architecture. It's worth noting that such a modification could result in higher memory consumption, which should be factored into any decision to proceed with this approach.
+While the current setup is solid, there's room for improvement. We could switch to a GenStage (Flow) architecture for potentially faster performance. However, this could use more memory, so that's a factor to consider before making the change.
 ```elixir
 case CSV.parse_file(path) do
   {:ok, stream} ->
@@ -76,13 +77,16 @@ end
 ```
 
 # REST API Layer
-Geolocation entries can be accessed via the following API endpoint: https://vio-geolocator.fly.dev/api/geolocations/your-api-here. The architectural approach for this feature aligns with best practices commonly found in Phoenix-based applications.
+You can get to geolocation entries through this API endpoint: https://vio-geolocator.fly.dev/api/geolocations/your-api-here. I've built this feature to line up with the best practices you'd typically see in Phoenix apps.
 
-To maintain simplicity and expedite development, input parameter validation was custom-engineered. However, for more intricate API requirements in the future, the adoption of Ecto changesets would be considered to enhance validation robustness.
+To keep things straightforward and speed up the development, I engineered the input parameter validation myself. But if we need more complex validation down the line, I'm considering using Ecto changesets to beef up the robustness.
 
 # CI/CD pipelines
-Both the Continuous Integration (CI) and Continuous Deployment (CD) pipelines have been meticulously engineered utilizing GitHub Actions.
+I've carefully set up both the Continuous Integration (CI) and Continuous Deployment (CD) pipelines using GitHub Actions.
 
-The CI pipeline incorporates a rigorous set of validations including strict credo checks, test executions, Dialyzer verifications, and formatting assessments, thereby ensuring code quality and maintainability.
+In the CI pipeline, I've included a bunch of checks to make sure the code is top-notch. We're talking credo checks, tests, Dialyzer verifications, and even formatting assessments. This way, the code stays clean and easy to work with.
 
-The CD pipeline is configured to automatically deploy the application to fly.io upon merging changes into the main branch, facilitating a seamless transition from development to production.
+For the CD pipeline, it's automated to deploy the app to fly.io as soon as any changes are merged into the main branch. This makes it super smooth to go from development to live production.\
+
+# Authorization
+I skipped the authorization part to keep things simple. But if you're thinking about security, I'd definitely recommend either adding authorization or putting the service in a protected network.
